@@ -2,26 +2,31 @@ extern mod rlg;
 use rlg::game::*;
 pub fn main() {
         
-        do new_game(~"my game") {
 
-            let lvl = Level::new(800,600);
-            
-           
-            let actor1 = GameActor::new(0,0,50,50,
+        do GameManager::new_game(~"my game") {
+            let gm = GameManager::new(800,600,10);
+                       
+            let actor1 = gm.spawn_actor(0,0,50,50,1,
                                         200,100,20);
-    
-            let mut actors = ~[actor1];
+            
 
-            do default_game_loop(&lvl){
+            let actor2 = gm.spawn_actor(0,100,50,50,1,
+                                        200,100,20);
+            //gm.game_actors.push(actor1);
 
-                for a in actors.mut_iter() {
-                    if a.rect.x as int > lvl.width {
-                        a.update_pos(-a.rect.x,0).redraw(&lvl);
-                    }
-                    else {
-                        a.move_right().redraw(&lvl);
-                    }
-                }  
-            } 
+
+            let mut v = ~[actor1,actor2];
+
+            do GameManager::default_game_loop(&gm.lvl){
+                for x in v.mut_iter(){
+                    
+                        x.move_right();
+                    
+                }
+            }    
+
+               
+             
         }
+        
     }
