@@ -5,8 +5,9 @@ pub struct Color{
     g: u8,
     b: u8
 }
-struct ActorController{
-    lvl_ctr: LevelController
+struct ActorController<'self>{
+    lvl_ctr: LevelController,
+    game_actors: ~[GameActor<'self>],
 }
 struct LevelController{
     lvl: Level
@@ -25,8 +26,7 @@ struct Level{
 }
 
 pub struct GameManager<'self>{
-    priv actor_ctr: ActorController ,
-    game_actors: ~[GameActor<'self>],
+    actor_ctr: ActorController<'self>,
     dt: DeltaTime
 }
 pub struct DeltaTime{
@@ -39,7 +39,7 @@ trait Move{
     fn move_left<'r>(&'r mut self)-> &'r mut Self;
     fn move_right<'r>(&'r mut self)-> &'r mut Self;
 }
-impl ActorController {
+impl <'self> ActorController <'self> {
     pub fn spawn_actor<'r>(&'r self,x: i16,y: i16, width: u16, height: u16,speed:i16, r:u8,g:u8,b:u8)-> GameActor<'r>{
         GameActor::new(&'r self.lvl_ctr.lvl,x,y,width,height,speed,r,g,b)
     }
@@ -49,7 +49,14 @@ impl <'self> GameManager <'self>{
         &'r self.actor_ctr.lvl_ctr.lvl
     }
     pub fn new(width: int, height: int,fps:int) -> GameManager<'self>{
-        GameManager { actor_ctr: ActorController {lvl_ctr: LevelController{lvl: Level::new(width,height,fps)}},game_actors: ~[], dt: DeltaTime::new()  }
+        GameManager { actor_ctr: ActorController {
+                                    game_actors: ~[],
+                                    lvl_ctr: LevelController{
+                                        lvl: Level::new(width,height,fps)}
+                                    },
+                                    
+                                    dt: DeltaTime::new()  
+                                }
     }
     pub fn spawn_actor<'r>(&'r self,x: i16,y: i16, width: u16, height: u16,speed:i16, r:u8,g:u8,b:u8)-> GameActor<'r>{
         self.actor_ctr.spawn_actor(x,y,width,height,speed,r,g,b)
@@ -84,7 +91,7 @@ impl <'self> GameManager <'self>{
                 sdl::event::QuitEvent => break,
                 _ => {}
         }
-        if dt_sum > fps {  
+        if dt_sum >= fps {  
         f();    
         dt_sum = 0.0f 
         }
@@ -153,10 +160,7 @@ impl<'self> GameActor<'self> {
         self
     }
     pub fn redraw(&self) {
-       // self.lvl.screen.fill(sdl::video::RGBA(0,0,0,255));
-        
-       //self.lvl.screen.fill_rect(Some(self.rect), sdl::video::RGBA(self.color.r,self.color.g,self.color.b,255));
-    
+       GameManager::draw_actor(self.lvl,self);
     }
     pub fn new<'r>(lvl: &'r Level,x: i16,y: i16, width: u16, height: u16,speed:i16, r:u8,g:u8,b:u8) -> GameActor<'r>{
         GameActor { lvl: lvl,
